@@ -14,9 +14,9 @@ body:
   - type: input
     id: persona
     attributes:
-      label: As a ... student at college of the Redwoods.
+      label: As a ... 
       description: List the persona this user story applies to.
-      placeholder: "Who?"
+      placeholder: College of the Redwoods Student.
     validations:
       required: true
   - type: input
