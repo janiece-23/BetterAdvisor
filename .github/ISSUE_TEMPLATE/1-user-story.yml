@@ -16,13 +16,13 @@ body:
     attributes:
       label: As a ... 
       description: List the persona this user story applies to.
-      placeholder: College of the Redwoods Student.
+      placeholder: 
     validations:
       required: true
   - type: input
     id: accomplishment
     attributes:
-      label: I want to ... use WedAdvisor more instead the of 7am-11pm timeframe.
+      label: I want to ... 
       description: What the persona wants to accomplish?
       placeholder: "What?"
     validations:
@@ -32,7 +32,7 @@ body:
     attributes:
       label: So that ... 
       description: Why they want to accomplish that thing?
-      placeholder: To be able to use the Website 24/7.
+      placeholder: 
     validations:
       required: true
   - type: textarea
