@@ -14,7 +14,7 @@ body:
   - type: input
     id: persona
     attributes:
-      label: As a ...
+      label: As a ... student at college of the Redwoods.
       description: List the persona this user story applies to.
       placeholder: "Who?"
     validations:
@@ -22,7 +22,7 @@ body:
   - type: input
     id: accomplishment
     attributes:
-      label: I want to ...
+      label: I want to ... use WedAdvisor more instead the of 7am-11pm timeframe.
       description: What the persona wants to accomplish?
       placeholder: "What?"
     validations:
@@ -30,7 +30,7 @@ body:
   - type: input
     id: why
     attributes:
-      label: So that ...
+      label: So that ... I use the website 24/7.
       description: Why they want to accomplish that thing?
       placeholder: "Why?"
     validations:
