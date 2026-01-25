@@ -30,9 +30,9 @@ body:
   - type: input
     id: why
     attributes:
-      label: So that ... I use the website 24/7.
+      label: So that ... 
       description: Why they want to accomplish that thing?
-      placeholder: "Why?"
+      placeholder: To be able to use the Website 24/7.
     validations:
       required: true
   - type: textarea
