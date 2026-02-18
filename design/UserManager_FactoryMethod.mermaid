@@ -1,0 +1,163 @@
+---
+title: Factory Pattern - User Management System
+---
+classDiagram
+    %% Factory Class
+    class UserFactory {
+        -DatabaseManager dbManager
+        +UserFactory()
+        +createUser(String userType, String username, String password, String email, String firstName, String lastName, String... additionalInfo) User
+        -saveUserToDatabase(User user, String... additionalInfo) void
+        -getUserByParam(String sql, String param) User
+        +getUserById(int userId) User
+        +getUserByUsername(String username) User
+    }
+
+    %% Base User Class
+    class User {
+        <<abstract>>
+        #int id
+        #String username
+        #String password
+        #String userType
+        #String email
+        #String firstName
+        #String lastName
+        #boolean isActive
+        #LocalDateTime lastLogin
+        +User()
+        +User(String username, String password, String email, String firstName, String lastName)
+        +displayInfo() void
+        +showDashboard() void
+        +getId() int
+        +getUsername() String
+        +getEmail() String
+        +getUserType() String
+        +getPassword() String
+        +getFirstName() String
+        +getLastName() String
+        +getFullName() String
+        +setId(int id) void
+        +setFirstName(String firstName) void
+        +setLastName(String lastName) void
+    }
+
+    %% Student Concrete Class
+    class Student {
+        #String studentId
+        #BigDecimal gpa
+        #String enrollmentStatus
+        #String academicStanding
+        #String classification
+        #String major
+        #String minor
+        #int advisorId
+        -List~Section~ sections
+        -List~WaitlistEntry~ waitlist
+        +Student()
+        +Student(String username, String password, String email, String firstName, String lastName, String studentId)
+        +showDashboard() void
+        #ensureId() void
+        +getStudentId() String
+        +getGpa() BigDecimal
+        +setGpa(BigDecimal gpa) void
+        +getEnrollmentStatus() String
+        +setEnrollmentStatus(String enrollmentStatus) void
+        +getAcademicStanding() String
+        +setAcademicStanding(String academicStanding) void
+        +getClassification() String
+        +setClassification(String classification) void
+        +getMajor() String
+        +setMajor(String major) void
+        +getMinor() String
+        +setMinor(String minor) void
+        +getAdvisorId() int
+        +setAdvisorId(int advisorId) void
+        +getSections() List~Section~
+        +setSections(List~Section~ sections) void
+        +getWaitlist() List~WaitlistEntry~
+        +setWaitlist(List~WaitlistEntry~ waitlist) void
+    }
+
+    %% Faculty Concrete Class
+    class Faculty {
+        -String employeeId
+        -String department
+        -String title
+        -String officeLocation
+        -String officeHours
+        -LocalDate hireDate
+        -List~Section~ sections
+        +Faculty()
+        +Faculty(String username, String password, String email, String firstName, String lastName, String employeeId, String department)
+        +showDashboard() void
+        +getEmployeeId() String
+        +getDepartment() String
+        +setEmployeeId(String employeeId) void
+        +setDepartment(String department) void
+        +getTitle() String
+        +setTitle(String title) void
+        +getOfficeLocation() String
+        +setOfficeLocation(String officeLocation) void
+        +getOfficeHours() String
+        +setOfficeHours(String officeHours) void
+        +getHireDate() LocalDate
+        +setHireDate(LocalDate hireDate) void
+        +getSections() List~Section~
+        +setSections(List~Section~ sections) void
+    }
+
+    %% DatabaseManager Singleton
+    class DatabaseManager {
+        <<singleton>>
+        -DatabaseManager instance
+        -DatabaseManager()
+        +getInstance() DatabaseManager
+        +executeInsert(String sql, Object... params) int
+        +executeUpdate(String sql, Object... params) void
+        +executeQuery(String sql, ResultSetHandler handler, Object... params) T
+        +upsert(Object entity) void
+        +upsertAll(List entities) void
+        +fetchMany(Class entityClass, String fkColumn, int fkValue) List
+        +fetchManyToMany(Class entityClass, String joinTable, String joinColumn, String inverseJoinColumn, int id) List
+    }
+
+    %% Related Entity Classes (simplified)
+    class Section {
+        -int sectionId
+        -int facultyId
+        -String courseCode
+        -String semester
+    }
+
+    class WaitlistEntry {
+        -int id
+        -int studentId
+        -int sectionId
+        -String status
+    }
+
+    %% Relationships
+    UserFactory ..> User : creates
+    UserFactory ..> Student : creates
+    UserFactory ..> Faculty : creates
+    UserFactory --> DatabaseManager : uses
+    
+    User <|-- Student : extends
+    User <|-- Faculty : extends
+    
+    Student "1" --> "*" Section : enrolls in
+    Student "1" --> "*" WaitlistEntry : has
+    Faculty "1" --> "*" Section : teaches
+    
+    Student ..> DatabaseManager : uses
+    Faculty ..> DatabaseManager : uses
+
+    %% Notes
+    note for UserFactory "Factory Pattern Implementation:\n- Centralizes object creation\n- Encapsulates instantiation logic\n- Handles polymorphic creation\n- Manages database persistence"
+    
+    note for User "Product (Abstract):\n- Defines common interface\n- Provides template methods\n- Uses Table-per-Subclass inheritance"
+    
+    note for Student "Concrete Product:\n- Implements student-specific behavior\n- Manages academic relationships\n- userType = 'STUDENT'"
+    
+    note for Faculty "Concrete Product:\n- Implements faculty-specific behavior\n- Manages teaching relationships\n- userType = 'FACULTY'"
