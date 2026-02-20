@@ -1,0 +1,16 @@
+classDiagram
+class NotifacationManager{
+    - observer: List~Observer~
+    - notifacationHistory: List~Notifacation~
+    - bdManager: DatabaseManager
+    - instance: notifactionManager
+
+    -NotifacationManager()
+    +getInstance() NotifacationManager
+    +attach(observer: Observe) void
+    +dettach(observer: Observe) void
+    +notifyObservers(notifacation Notifacation) void
+    +broadcast(type: String, message: String, )
+
+
+}
