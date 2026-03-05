@@ -1,3 +1,7 @@
+# Ignore Advision Database
+advising.mv.db
+advising.trace.db
+
 # Compiled class file
 *.class
 
