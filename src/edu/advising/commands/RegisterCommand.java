@@ -10,6 +10,8 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.advising.users.Student;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -99,6 +101,7 @@ public class RegisterCommand extends BaseCommand {
     protected String serializeCommandData() {
         ObjectMapper mapper = new ObjectMapper();
         Map<String, Object> data = new HashMap<>();
+        data.put("studentPk", student.getId());    //TODO: I'm not sure this is needed since my ORM handles sub-classes.
         data.put("studentId", student.getStudentId());
         data.put("sectionId", section.getId()); // Assuming Section has an id
         data.put("enrollmentId", enrollmentId);
@@ -115,8 +118,13 @@ public class RegisterCommand extends BaseCommand {
         try {
             Map<String, Object> data = mapper.readValue(json, Map.class);
             // Reconstruct student, section, etc. from the data
-            this.student = DatabaseManager.getInstance()
-                    .fetchOne(ObservableStudent.class, "id", data.get("studentId"));
+            // TODO: Figure out if we have to really deal with studentPk because student is a subclass of  User.
+            int studentPk = (int) data.get("studentPk");
+            Student raw = DatabaseManager.getInstance().fetchOne(Student.class, "id", studentPk);
+            if (raw != null) {
+                this.student = ObservableStudent.fromSuperType(raw);
+            }
+
             this.section = DatabaseManager.getInstance()
                     .fetchOne(Section.class, "id", data.get("sectionId"));
             this.enrollmentId = (int)data.get("enrollmentId");

@@ -1,0 +1,189 @@
+---
+title: "Academic Advising System — Factory Pattern (Week 2)"
+---
+classDiagram
+    direction TB
+
+    %% ─────────────────────────────────────────
+    %%  FACTORY PATTERN CORE  (highlighted)
+    %% ─────────────────────────────────────────
+
+    class UserFactory:::core {
+        <<Factory>>
+        -dbManager: DatabaseManager
+        +createUser(type: String, username: String, password: String, email: String, firstName: String, lastName: String, extraArgs: String) User
+        +getUserById(id: int) User
+        +getUserByUsername(username: String) User
+        -hashPassword(plaintext: String) String
+        -validateRequiredFields(fields: String) void
+    }
+
+    %% ─────────────────────────────────────────
+    %%  PRODUCT HIERARCHY  (highlighted)
+    %% ─────────────────────────────────────────
+
+    class User:::core {
+        <<abstract>>
+        #id: int
+        #username: String
+        #password: String
+        #email: String
+        #phone: String
+        #firstName: String
+        #lastName: String
+        #userType: String
+        #isActive: boolean
+        #createdAt: LocalDateTime
+        #updatedAt: LocalDateTime
+        +getId() int
+        +getFullName() String
+        +getEmail() String
+        +getPhone() String
+        +setEmail(email: String) void
+        +setPhone(phone: String) void
+        +showDashboard()* void
+    }
+
+    class Student:::core {
+        -studentId: String
+        -gpa: BigDecimal
+        -enrollmentStatus: String
+        -classification: String
+        -major: String
+        -minor: String
+        -advisorId: int
+        +showDashboard() void
+        +getSections() List~Section~
+        +getWaitlist() List~WaitlistEntry~
+        +getTranscript() List~Enrollment~
+    }
+
+    class Faculty:::core {
+        -employeeId: String
+        -department: String
+        -title: String
+        -officeLocation: String
+        -officeHours: String
+        -hireDate: LocalDate
+        +showDashboard() void
+        +getSections() List~Section~
+        +setSections(sections: List~Section~) void
+        +getEmployeeId() String
+        +getDepartment() String
+    }
+
+    %% ─────────────────────────────────────────
+    %%  OBSERVABLE WRAPPERS
+    %%  (Factory produces Student/Faculty;
+    %%   Observer pattern promotes them to
+    %%   Observable via fromSuperType())
+    %% ─────────────────────────────────────────
+
+    class ObservableStudent {
+        -notifications: List~Notification~
+        -preferences: NotificationPreferences
+        +update(notification: Notification) void
+        +getUserId() int
+        +fromSuperType(s: Student)$ ObservableStudent
+    }
+
+    class ObservableFaculty {
+        -notifications: List~Notification~
+        -preferences: NotificationPreferences
+        +update(notification: Notification) void
+        +getUserId() int
+        +fromSuperType(f: Faculty)$ ObservableFaculty
+    }
+
+    %% ─────────────────────────────────────────
+    %%  SUPPORTING DOMAIN MODELS
+    %%  (populated by factory-created users)
+    %% ─────────────────────────────────────────
+
+    class Section {
+        -id: int
+        -courseId: int
+        -sectionNumber: String
+        -semester: String
+        -year: int
+        -capacity: int
+        -enrolled: int
+        -facultyId: int
+        +enroll(student: Student) int
+        +drop(student: Student) boolean
+        +hasCapacity() boolean
+        +getCourseCode() String
+    }
+
+    class Enrollment {
+        -id: int
+        -studentId: int
+        -sectionId: int
+        -status: String
+        -enrolledAt: LocalDateTime
+        -droppedAt: LocalDateTime
+        -grade: String
+    }
+
+    class WaitlistEntry {
+        -id: int
+        -studentId: int
+        -sectionId: int
+        -position: int
+        -addedAt: LocalDateTime
+        +getStudent() Student
+        +getSection() Section
+    }
+
+    %% ─────────────────────────────────────────
+    %%  INFRASTRUCTURE
+    %% ─────────────────────────────────────────
+
+    class DatabaseManager {
+        <<Singleton>>
+        +getInstance()$ DatabaseManager
+        +upsert(entity: T) void
+        +fetchOne(clazz: Class~T~, col: String, val: Object) T
+        +fetchMany(clazz: Class~T~, col: String, val: Object) List~T~
+    }
+
+    %% ─────────────────────────────────────────
+    %%  RELATIONSHIPS — Factory Pattern
+    %% ─────────────────────────────────────────
+
+    UserFactory ..>  User            : creates
+    UserFactory ..>  Student         : «creates» when type=STUDENT
+    UserFactory ..>  Faculty         : «creates» when type=FACULTY
+    UserFactory ..>  DatabaseManager : persists via getInstance()
+
+    %% ─────────────────────────────────────────
+    %%  RELATIONSHIPS — Product hierarchy
+    %% ─────────────────────────────────────────
+
+    User    <|--  Student
+    User    <|--  Faculty
+    Student <|--  ObservableStudent
+    Faculty <|--  ObservableFaculty
+
+    %% ─────────────────────────────────────────
+    %%  RELATIONSHIPS — Student associations
+    %% ─────────────────────────────────────────
+
+    Student      "1" o-- "0..*" Enrollment    : has
+    Student      "1" o-- "0..*" WaitlistEntry : has
+    Enrollment   "0..*" --o "1" Section       : belongs to
+    WaitlistEntry "0..*" --o "1" Section      : queues for
+
+    %% ─────────────────────────────────────────
+    %%  RELATIONSHIPS — Faculty associations
+    %% ─────────────────────────────────────────
+
+    Faculty "1" o-- "0..*" Section : teaches
+
+    %% ─────────────────────────────────────────
+    %%  STYLING — Factory Pattern nodes pop (green)
+    %% ─────────────────────────────────────────
+    style UserFactory       fill:#0d3b1e,stroke:#57cc99,stroke-width:3px,color:#ffffff
+    style User              fill:#1a1a2e,stroke:#57cc99,stroke-width:3px,color:#ffffff
+    style Student           fill:#16213e,stroke:#57cc99,stroke-width:3px,color:#ffffff
+    style Faculty           fill:#16213e,stroke:#57cc99,stroke-width:3px,color:#ffffff

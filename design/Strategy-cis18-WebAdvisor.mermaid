@@ -1,0 +1,171 @@
+---
+title: "Academic Advising System — Strategy Pattern (Week 3)"
+---
+classDiagram
+    direction TB
+
+    %% ─────────────────────────────────────────
+    %%  STRATEGY PATTERN CORE  (highlighted)
+    %% ─────────────────────────────────────────
+
+    class AuthenticationStrategy:::core {
+        <<interface>>
+        +authenticate(username: String, password: String, ipAddress: String, dbManager: DatabaseManager) AuthenticationResult
+        +getStrategyName() String
+    }
+
+    class AuthenticationContext:::core {
+        <<Context>>
+        -strategy: AuthenticationStrategy
+        -dbManager: DatabaseManager
+        -currentUser: User
+        -sessionToken: String
+        -loginAttempts: Map~String, Integer~
+        -MAX_ATTEMPTS: int$
+        +AuthenticationContext(strategy: AuthenticationStrategy)
+        +setStrategy(strategy: AuthenticationStrategy) void
+        +getStrategy() AuthenticationStrategy
+        +login(username: String, password: String, ip: String) AuthenticationResult
+        +logout() void
+        +changePassword(username: String, oldPassword: String, newPassword: String) boolean
+        +isLoggedIn() boolean
+        +getCurrentUser() User
+        +getSessionToken() String
+        -generateSessionToken() String
+        -recordLoginAttempt(userId: int, success: boolean, ip: String) void
+        -isAccountLocked(username: String) boolean
+    }
+
+    class BasicAuthentication:::core {
+        +authenticate(username: String, password: String, ipAddress: String, dbManager: DatabaseManager) AuthenticationResult
+        +getStrategyName() String
+        -verifyPassword(plaintext: String, hashed: String) boolean
+    }
+
+    class SecureAuthentication:::core {
+        -BCRYPT_ROUNDS: int$
+        +authenticate(username: String, password: String, ipAddress: String, dbManager: DatabaseManager) AuthenticationResult
+        +getStrategyName() String
+        -bcryptVerify(plaintext: String, hashed: String) boolean
+        -checkPasswordPolicy(password: String) boolean
+    }
+
+    class TwoFactorAuthentication:::core {
+        -pendingUsers: Map~String, String~
+        -TOTP_WINDOW: int$
+        +authenticate(username: String, password: String, ipAddress: String, dbManager: DatabaseManager) AuthenticationResult
+        +verifyTOTP(username: String, token: String) AuthenticationResult
+        +getStrategyName() String
+        -generateTOTPSecret() String
+        -verifyTOTPToken(secret: String, token: String) boolean
+        -sendTOTPChallenge(user: User) void
+    }
+
+    %% ─────────────────────────────────────────
+    %%  RESULT VALUE OBJECT
+    %% ─────────────────────────────────────────
+
+    class AuthenticationResult {
+        -success: boolean
+        -user: User
+        -sessionToken: String
+        -message: String
+        -requiresTwoFactor: boolean
+        -failureReason: String
+        +isSuccess() boolean
+        +getUser() User
+        +getSessionToken() String
+        +getMessage() String
+        +requiresTwoFactor() boolean
+        +getFailureReason() String
+    }
+
+    %% ─────────────────────────────────────────
+    %%  LOGIN ATTEMPT AUDIT
+    %% ─────────────────────────────────────────
+
+    class LoginAttempt {
+        -id: int
+        -userId: int
+        -success: boolean
+        -ipAddress: String
+        -attemptedAt: LocalDateTime
+        -strategyUsed: String
+    }
+
+    %% ─────────────────────────────────────────
+    %%  USER HIERARCHY (referenced by context)
+    %% ─────────────────────────────────────────
+
+    class User {
+        #id: int
+        #username: String
+        #password: String
+        #email: String
+        #firstName: String
+        #lastName: String
+        #userType: String
+        #isActive: boolean
+        +getId() int
+        +getFullName() String
+        +showDashboard()* void
+    }
+
+    class Student {
+        -studentId: String
+        -major: String
+        +showDashboard() void
+    }
+
+    class Faculty {
+        -employeeId: String
+        -department: String
+        +showDashboard() void
+    }
+
+    %% ─────────────────────────────────────────
+    %%  INFRASTRUCTURE
+    %% ─────────────────────────────────────────
+
+    class DatabaseManager {
+        <<Singleton>>
+        +getInstance()$ DatabaseManager
+        +fetchOne(clazz: Class~T~, col: String, val: Object) T
+        +executeUpdate(sql: String, params: Object) int
+        +executeInsert(sql: String, params: Object) int
+    }
+
+    %% ─────────────────────────────────────────
+    %%  RELATIONSHIPS — Strategy Pattern
+    %% ─────────────────────────────────────────
+
+    AuthenticationStrategy  <|..  BasicAuthentication      : implements
+    AuthenticationStrategy  <|..  SecureAuthentication     : implements
+    AuthenticationStrategy  <|..  TwoFactorAuthentication  : implements
+
+    AuthenticationContext   o--   "1"    AuthenticationStrategy : uses (swappable)
+    AuthenticationContext   ..>   AuthenticationResult          : returns
+    AuthenticationContext   ..>   DatabaseManager               : queries users via
+    AuthenticationContext   *--   "0..*" LoginAttempt            : records
+
+    BasicAuthentication     ..>   DatabaseManager : fetchOne(User)
+    SecureAuthentication    ..>   DatabaseManager : fetchOne(User)
+    TwoFactorAuthentication ..>   DatabaseManager : fetchOne(User)
+
+    %% ─────────────────────────────────────────
+    %%  RELATIONSHIPS — Result and User
+    %% ─────────────────────────────────────────
+
+    AuthenticationResult  o-- "0..1" User : wraps on success
+
+    User    <|--  Student
+    User    <|--  Faculty
+
+    %% ─────────────────────────────────────────
+    %%  STYLING — Strategy Pattern nodes pop (purple)
+    %% ─────────────────────────────────────────
+    style AuthenticationStrategy    fill:#1a1a2e,stroke:#c77dff,stroke-width:3px,color:#ffffff
+    style AuthenticationContext     fill:#0f3460,stroke:#c77dff,stroke-width:3px,color:#ffffff
+    style BasicAuthentication       fill:#16213e,stroke:#c77dff,stroke-width:3px,color:#ffffff
+    style SecureAuthentication      fill:#16213e,stroke:#c77dff,stroke-width:3px,color:#ffffff
+    style TwoFactorAuthentication   fill:#16213e,stroke:#c77dff,stroke-width:3px,color:#ffffff

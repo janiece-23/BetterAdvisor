@@ -1,0 +1,303 @@
+---
+title: "Academic Advising System — Command Pattern (Week 5)"
+---
+classDiagram
+    direction TB
+
+    %% ─────────────────────────────────────────
+    %%  COMMAND PATTERN CORE  (highlighted)
+    %% ─────────────────────────────────────────
+
+    class Command:::core {
+        <<interface>>
+        +execute() void
+        +undo() void
+        +isUndoable() boolean
+        +getDescription() String
+        +getExecutionTime() LocalDateTime
+        +wasSuccessful() boolean
+    }
+
+    class BaseCommand:::core {
+        <<abstract>>
+        #id: int
+        #userId: int
+        #commandType: String
+        #commandData: String
+        #executionTime: LocalDateTime
+        #undoneAt: LocalDateTime
+        #isUndone: boolean
+        #successful: boolean
+        #errorMessage: String
+        #executed: boolean
+        +getExecutionTime() LocalDateTime
+        +wasSuccessful() boolean
+        +getId() int
+        +setUserId(userId: int) void
+        +prepareForStorage() void
+        +initAfterLoad() void
+        #serializeCommandData()* String
+        #deserializeCommandData(json: String)* void
+    }
+
+    class CommandHistory:::core {
+        -undoStack: Deque~BaseCommand~
+        -redoStack: Deque~BaseCommand~
+        -userId: int
+        -maxStackSize: int
+        -dbManager: DatabaseManager
+        +executeCommand(command: BaseCommand) void
+        +undo() boolean
+        +redo() boolean
+        +canUndo() boolean
+        +canRedo() boolean
+        +peekUndoDescription() String
+        +peekRedoDescription() String
+        +getUndoStack() List~BaseCommand~
+        +getAuditHistory(limit: int) List~CommandRecord~
+        -persistNewCommand(command: BaseCommand) void
+        -markCommandUndone(command: BaseCommand) void
+        -markCommandRedone(command: BaseCommand) void
+    }
+
+    class CommandExecutor:::core {
+        <<Invoker>>
+        -history: CommandHistory
+        +execute(command: BaseCommand) void
+        +undo() boolean
+        +redo() boolean
+        +canUndo() boolean
+        +canRedo() boolean
+        +peekUndoDescription() String
+        +peekRedoDescription() String
+        +getSessionHistory() List~BaseCommand~
+        +getAuditHistory(limit: int) List~CommandRecord~
+    }
+
+    %% ─────────────────────────────────────────
+    %%  CONCRETE COMMANDS  (highlighted)
+    %% ─────────────────────────────────────────
+
+    class RegisterCommand:::core {
+        -student: ObservableStudent
+        -section: Section
+        -enrollmentId: int
+        -notificationManager: NotificationManager
+        +execute() void
+        +undo() void
+        +isUndoable() boolean
+        +getDescription() String
+    }
+
+    class DropCommand:::core {
+        -student: ObservableStudent
+        -section: Section
+        -previousEnrollmentId: int
+        +execute() void
+        +undo() void
+        +isUndoable() boolean
+        +getDescription() String
+        -promoteFromWaitlist() void
+    }
+
+    class WaitlistCommand:::core {
+        -student: ObservableStudent
+        -section: Section
+        -waitlistId: int
+        -notificationManager: NotificationManager
+        +execute() void
+        +undo() void
+        +isUndoable() boolean
+        +getDescription() String
+    }
+
+    class PaymentCommand:::core {
+        -student: ObservableStudent
+        -amount: BigDecimal
+        -paymentType: String
+        -paymentMethod: String
+        -paymentRecord: Payment
+        +execute() void
+        +undo() void
+        +isUndoable() boolean
+        +getDescription() String
+        +getPaymentReferenceNumber() String
+        -updateStudentAccountBalance(delta: BigDecimal) void
+    }
+
+    class UpdateContactCommand:::core {
+        -student: ObservableStudent
+        -newEmail: String
+        -newPhone: String
+        -oldEmail: String
+        -oldPhone: String
+        +execute() void
+        +undo() void
+        +isUndoable() boolean
+        +getDescription() String
+        -isValidEmail(email: String) boolean
+        -isDuplicateEmail(email: String, excludeId: int) boolean
+    }
+
+    class FacultyDropCommand:::core {
+        -faculty: Faculty
+        -student: ObservableStudent
+        -section: Section
+        -dropReason: String
+        -droppedEnrollmentId: int
+        +execute() void
+        +undo() void
+        +isUndoable() boolean
+        +getDescription() String
+        -promoteFromWaitlistIfAvailable() void
+    }
+
+    class GrantWaitlistPermissionCommand:::core {
+        -faculty: Faculty
+        -student: ObservableStudent
+        -section: Section
+        -notes: String
+        -validForHours: int
+        -grantId: int
+        +execute() void
+        +undo() void
+        +isUndoable() boolean
+        +getDescription() String
+    }
+
+    class MacroCommand:::core {
+        -commands: List~BaseCommand~
+        -description: String
+        +addCommand(command: BaseCommand) void
+        +execute() void
+        +undo() void
+        +isUndoable() boolean
+        +getDescription() String
+    }
+
+    %% ─────────────────────────────────────────
+    %%  AUDIT / HISTORY SUPPORT
+    %% ─────────────────────────────────────────
+
+    class CommandRecord {
+        -id: int
+        -commandType: String
+        -commandData: String
+        -executedAt: LocalDateTime
+        -undoneAt: LocalDateTime
+        -undone: boolean
+        -success: boolean
+        -errorMessage: String
+        +getStatusLabel() String
+        +toString() String
+    }
+
+    %% ─────────────────────────────────────────
+    %%  DOMAIN MODELS (Receivers / Context)
+    %% ─────────────────────────────────────────
+
+    class Section {
+        -id: int
+        -courseId: int
+        -capacity: int
+        -enrolled: int
+        -facultyId: int
+        +enroll(student: Student) int
+        +drop(student: Student) boolean
+        +addToWaitlist(student: Student) int
+        +removeFromWaitlist(student: Student) boolean
+        +hasCapacity() boolean
+        +getWaitlistPosition(student: Student) int
+        +getCourseCode() String
+    }
+
+    class Payment {
+        -id: int
+        -studentId: int
+        -amount: BigDecimal
+        -paymentType: String
+        -paymentMethod: String
+        -status: String
+        -referenceNumber: String
+        +isCompleted() boolean
+        +isRefunded() boolean
+    }
+
+    class ObservableStudent {
+        -notifications: List~Notification~
+        -preferences: NotificationPreferences
+        +update(notification: Notification) void
+        +fromSuperType(s: Student)$ ObservableStudent
+    }
+
+    class NotificationManager {
+        <<Singleton>>
+        +notifyRegistration(student: Student, course: String, success: boolean) void
+        +notifyPaymentReceived(student: Student, amount: double, type: String) void
+        +notifyWaitlistUpdate(student: Student, course: String, position: int) void
+    }
+
+    class DatabaseManager {
+        <<Singleton>>
+        +upsert(entity: Object) void
+        +executeUpdate(sql: String, params: Object) int
+        +executeInsert(sql: String, params: Object) int
+        +executeQuery(sql: String, handler: QueryHandler, params: Object) T
+        +fetchOne(clazz: Class, col: String, val: Object) T
+    }
+
+    %% ─────────────────────────────────────────
+    %%  RELATIONSHIPS — Command Pattern
+    %% ─────────────────────────────────────────
+
+    Command          <|..  BaseCommand         : implements
+
+    BaseCommand      <|--  RegisterCommand     : extends
+    BaseCommand      <|--  DropCommand         : extends
+    BaseCommand      <|--  WaitlistCommand     : extends
+    BaseCommand      <|--  PaymentCommand      : extends
+    BaseCommand      <|--  UpdateContactCommand : extends
+    BaseCommand      <|--  FacultyDropCommand  : extends
+    BaseCommand      <|--  GrantWaitlistPermissionCommand : extends
+    BaseCommand      <|--  MacroCommand        : extends
+
+    CommandExecutor  *--   "1"    CommandHistory    : owns
+    CommandHistory   o--   "0..*" BaseCommand       : manages stacks of
+    CommandHistory   ..>   CommandRecord            : produces
+    CommandHistory   ..>   DatabaseManager          : persists via
+
+    MacroCommand     o--   "0..*" BaseCommand        : composes
+
+    %% ─────────────────────────────────────────
+    %%  RELATIONSHIPS — Commands → Receivers
+    %% ─────────────────────────────────────────
+
+    RegisterCommand       ..>  Section              : calls enroll()
+    RegisterCommand       ..>  NotificationManager  : fires notification
+    DropCommand           ..>  Section              : calls drop()
+    WaitlistCommand       ..>  Section              : calls addToWaitlist()
+    WaitlistCommand       ..>  NotificationManager  : fires notification
+    PaymentCommand        ..>  Payment              : creates and persists
+    PaymentCommand        ..>  DatabaseManager      : updates student_accounts
+    PaymentCommand        ..>  NotificationManager  : fires notification
+    UpdateContactCommand  ..>  ObservableStudent    : mutates and upserts
+    UpdateContactCommand  ..>  DatabaseManager      : persists via
+    FacultyDropCommand    ..>  Section              : calls drop()
+    FacultyDropCommand    ..>  NotificationManager  : fires notification
+    GrantWaitlistPermissionCommand ..> DatabaseManager : inserts permission_grants
+
+    %% ─────────────────────────────────────────
+    %%  STYLING — Command Pattern nodes pop (gold)
+    %% ─────────────────────────────────────────
+    style Command                        fill:#1a1a2e,stroke:#ffd60a,stroke-width:3px,color:#ffffff
+    style BaseCommand                    fill:#16213e,stroke:#ffd60a,stroke-width:3px,color:#ffffff
+    style CommandHistory                 fill:#0f3460,stroke:#ffd60a,stroke-width:3px,color:#ffffff
+    style CommandExecutor                fill:#0f3460,stroke:#ffd60a,stroke-width:3px,color:#ffffff
+    style RegisterCommand                fill:#0f3460,stroke:#ffd60a,stroke-width:3px,color:#ffffff
+    style DropCommand                    fill:#0f3460,stroke:#ffd60a,stroke-width:3px,color:#ffffff
+    style WaitlistCommand                fill:#0f3460,stroke:#ffd60a,stroke-width:3px,color:#ffffff
+    style PaymentCommand                 fill:#0f3460,stroke:#ffd60a,stroke-width:3px,color:#ffffff
+    style UpdateContactCommand           fill:#0f3460,stroke:#ffd60a,stroke-width:3px,color:#ffffff
+    style FacultyDropCommand             fill:#0f3460,stroke:#ffd60a,stroke-width:3px,color:#ffffff
+    style GrantWaitlistPermissionCommand fill:#0f3460,stroke:#ffd60a,stroke-width:3px,color:#ffffff
+    style MacroCommand                   fill:#0f3460,stroke:#ffd60a,stroke-width:3px,color:#ffffff

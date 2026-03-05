@@ -1,0 +1,224 @@
+---
+title: "Academic Advising System — Observer Pattern"
+---
+classDiagram
+    direction TB
+
+    %% ─────────────────────────────────────────
+    %%  OBSERVER PATTERN CORE  (highlighted)
+    %% ─────────────────────────────────────────
+
+    class Subject:::core {
+        <<interface>>
+        +attach(observer: Observer) void
+        +detach(observer: Observer) void
+        +notifyObservers(notification: Notification) void
+    }
+
+    class Observer:::core {
+        <<interface>>
+        +update(notification: Notification) void
+        +getUserId() int
+    }
+
+    class Notification:::core {
+        -id: int
+        -type: String
+        -message: String
+        -priority: String
+        -timestamp: LocalDateTime
+        -userId: int
+        -read: boolean
+        -metadata: Map~String, String~
+        +markAsRead() void
+        +addMetadata(key: String, value: String) void
+        +toString() String
+    }
+
+    class NotificationManager:::core {
+        <<Singleton>>
+        -observers: List~Observer~
+        -notificationHistory: List~Notification~
+        -dbManager: DatabaseManager
+        -instance: NotificationManager$
+        -NotificationManager()
+        +getInstance()$ NotificationManager
+        +attach(observer: Observer) void
+        +detach(observer: Observer) void
+        +notifyObservers(notification: Notification) void
+        +broadcast(type: String, message: String, priority: String) void
+        +notifyGradeChange(student: Student, courseCode: String, grade: String) void
+        +notifyRegistration(student: Student, courseCode: String, success: boolean) void
+        +notifyPaymentReceived(student: Student, amount: double, paymentType: String) void
+        +notifyFinancialAid(student: Student, aidType: String, status: String, amount: double) void
+        +notifyDocumentAvailable(user: User, documentName: String, documentType: String) void
+        +notifyRestriction(student: Student, restrictionType: String, details: String) void
+        +notifyWaitlistUpdate(student: Student, courseCode: String, position: int) void
+        +getUnreadNotifications(userId: int) List~Notification~
+        +getNotificationHistory(userId: int, limit: int) List~Notification~
+        +markAsRead(notificationId: int) void
+        +getObserverCount() int
+        -persistNotification(notification: Notification) void
+    }
+
+    %% ─────────────────────────────────────────
+    %%  STRATEGY — Notification Channels
+    %% ─────────────────────────────────────────
+
+    class NotificationChannel {
+        <<interface>>
+        +send(notification: Notification, user: User) void
+    }
+
+    class EmailChannel {
+        +send(notification: Notification, user: User) void
+    }
+
+    class SMSChannel {
+        +send(notification: Notification, user: User) void
+    }
+
+    class PushChannel {
+        +send(notification: Notification, user: User) void
+    }
+
+    %% ─────────────────────────────────────────
+    %%  PREFERENCES
+    %% ─────────────────────────────────────────
+
+    class NotificationPref {
+        -type: String
+        -shouldNotify: boolean
+        -emailEnabled: boolean
+        -smsEnabled: boolean
+        -pushEnabled: boolean
+        +shouldNotify() boolean
+        +isEmailEnabled() boolean
+        +isSmsEnabled() boolean
+        +isPushEnabled() boolean
+    }
+
+    class NotificationPreferences {
+        -userId: int
+        -prefs: Map~String, NotificationPref~
+        +getNotificationPref(type: String) Optional~NotificationPref~
+        +updatePref(type: String, pref: NotificationPref) void
+    }
+
+    %% ─────────────────────────────────────────
+    %%  USER HIERARCHY
+    %% ─────────────────────────────────────────
+
+    class User {
+        #id: int
+        #username: String
+        #password: String
+        #email: String
+        #firstName: String
+        #lastName: String
+        #userType: String
+        +getId() int
+        +showDashboard() void
+    }
+
+    class Student {
+        #studentId: String
+        #gpa: BigDecimal
+        #enrollmentStatus: String
+        #classification: String
+        #major: String
+        #minor: String
+        #advisorId: int
+        +getSections() List~Section~
+        +getWaitlist() List~WaitlistEntry~
+    }
+
+    class ObservableStudent:::core {
+        -notifications: List~Notification~
+        -preferences: NotificationPreferences
+        +update(notification: Notification) void
+        +getUserId() int
+        +getNotifications() List~Notification~
+        +getUnreadNotifications() List~Notification~
+        +viewNotifications() void
+        +fromSuperType(superObj: Student)$ ObservableStudent
+    }
+
+    class Faculty {
+        -employeeId: String
+        -department: String
+        -title: String
+        -officeLocation: String
+        -officeHours: String
+        -hireDate: LocalDate
+        +getSections() List~Section~
+        +setSections(sections: List~Section~) void
+        +showDashboard() void
+    }
+
+    class ObservableFaculty:::core {
+        -notifications: List~Notification~
+        -preferences: NotificationPreferences
+        +update(notification: Notification) void
+        +getUserId() int
+        +getNotifications() List~Notification~
+        +getPreferences() NotificationPreferences
+        +fromSuperType(superObj: Faculty)$ ObservableFaculty
+    }
+
+    %% ─────────────────────────────────────────
+    %%  RELATIONSHIPS — Observer Pattern
+    %% ─────────────────────────────────────────
+
+    Subject         <|..  NotificationManager  : implements
+    Observer        <|..  ObservableStudent    : implements
+    Observer        <|..  ObservableFaculty    : implements
+
+    NotificationManager o-- "0..*" Observer    : maintains
+    NotificationManager ..>  Notification      : creates and broadcasts
+    NotificationManager ..>  DatabaseManager   : persists via
+
+    Observer        ..>  Notification           : receives
+
+    %% ─────────────────────────────────────────
+    %%  RELATIONSHIPS — Inheritance
+    %% ─────────────────────────────────────────
+
+    User    <|--  Student
+    User    <|--  Faculty
+    Student <|--  ObservableStudent
+    Faculty <|--  ObservableFaculty
+
+    %% ─────────────────────────────────────────
+    %%  RELATIONSHIPS — Composition and Dependencies
+    %% ─────────────────────────────────────────
+
+    ObservableStudent *--  "1"    NotificationPreferences : owns
+    ObservableStudent *--  "0..*" Notification            : stores
+    ObservableFaculty *--  "1"    NotificationPreferences : owns
+    ObservableFaculty *--  "0..*" Notification            : stores
+
+    NotificationPreferences *-- "1..*" NotificationPref   : contains
+
+    ObservableStudent ..> NotificationChannel : delegates delivery via
+    ObservableStudent ..> NotificationPref    : checks before accepting
+    ObservableFaculty ..> NotificationChannel : delegates delivery via
+    ObservableFaculty ..> NotificationPref    : checks before accepting
+
+    %% ─────────────────────────────────────────
+    %%  RELATIONSHIPS — Strategy
+    %% ─────────────────────────────────────────
+
+    NotificationChannel <|.. EmailChannel : implements
+    NotificationChannel <|.. SMSChannel   : implements
+    NotificationChannel <|.. PushChannel  : implements
+
+    %% ─────────────────────────────────────────
+    %%  STYLING — Observer Pattern nodes pop
+    %% ─────────────────────────────────────────
+    style Subject              fill:#1a1a2e,stroke:#e94560,stroke-width:3px,color:#ffffff
+    style Observer             fill:#1a1a2e,stroke:#e94560,stroke-width:3px,color:#ffffff
+    style Notification         fill:#16213e,stroke:#e94560,stroke-width:3px,color:#ffffff
+    style NotificationManager  fill:#0f3460,stroke:#e94560,stroke-width:3px,color:#ffffff
+    style ObservableStudent    fill:#0f3460,stroke:#e94560,stroke-width:3px,color:#ffffff
+    style ObservableFaculty    fill:#0f3460,stroke:#e94560,stroke-width:3px,color:#ffffff

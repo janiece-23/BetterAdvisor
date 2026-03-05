@@ -18,11 +18,13 @@ public class DropCommand extends BaseCommand {
     private ObservableStudent student;
     private Section section;
     private int previousEnrollmentId;
+    private DatabaseManager dbManager;
 
     public DropCommand(ObservableStudent student, Section section) {
         super();
         this.student = student;
         this.section = section;
+        this.dbManager = DatabaseManager.getInstance();
     }
 
     @Override
@@ -79,20 +81,15 @@ public class DropCommand extends BaseCommand {
     }
 
     private void updateEnrollmentStatus(String status) {
-        /*
+        // Section.drop() already updates the enrollment via ORM upsert.
+        // This method exists as a safety net for direct DropCommand use outside Section.
         try {
             String sql = "UPDATE enrollments SET status = ? " +
                     "WHERE student_id = ? AND section_id = ? AND status = 'ENROLLED'";
-            PreparedStatement pstmt = DatabaseManager.getInstance().getConnection()
-                    .prepareStatement(sql);
-            pstmt.setString(1, status);
-            pstmt.setInt(2, student.getId());
-            pstmt.setInt(3, section.getId());
-            pstmt.executeUpdate();
+            dbManager.executeUpdate(sql, status, student.getId(), section.getId());
         } catch (SQLException e) {
-            System.err.println("Error updating enrollment: " + e.getMessage());
+            System.err.println("DropCommand: enrollment status sync failed — " + e.getMessage());
         }
-        */
     }
 
     private void promoteFromWaitlist() throws SQLException, IllegalAccessException {

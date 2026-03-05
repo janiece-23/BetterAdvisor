@@ -1,0 +1,192 @@
+---
+title: "Academic Advising System — Singleton Pattern (Week 1)"
+---
+classDiagram
+    direction TB
+
+    %% ─────────────────────────────────────────
+    %%  SINGLETON PATTERN CORE  (highlighted)
+    %% ─────────────────────────────────────────
+
+    class DatabaseManager:::core {
+        <<Singleton>>
+        -instance: DatabaseManager$
+        -dataSource: HikariDataSource
+        -URL: String$
+        -USER: String$
+        -PASSWORD: String$
+        -DatabaseManager()
+        +getInstance()$ DatabaseManager
+        +upsert(entity: T) void
+        +upsertAll(entities: List~T~) void
+        +delete(item: T) void
+        +deleteAll(items: List~T~) void
+        +fetchOne(clazz: Class~T~, col: String, val: Object) T
+        +fetchMany(clazz: Class~T~, col: String, val: Object) List~T~
+        +fetchManyToMany(clazz: Class~T~, joinTable: String, joinCol: String, invJoinCol: String, srcId: Object) List~T~
+        +fetchList(sql: String, handler: QueryHandler~T~, params: Object) List~T~
+        +executeQuery(sql: String, handler: QueryHandler~T~, params: Object) T
+        +executeInsert(sql: String, params: Object) int
+        +executeUpdate(sql: String, params: Object) int
+        +shutdown() void
+        -initializeDatabase() void
+        +seedDatabase() void
+        -buildUpsertSql(clazz: Class, conn: Connection) String
+        -buildJoinedFromClause(clazz: Class) String
+        -getTableHierarchy(clazz: Class) List~Class~
+        -getPrimaryIdColumnName(clazz: Class) String
+        -getPrimaryIdColumn(clazz: Class) Optional~Field~
+        -setParameters(pstmt: PreparedStatement, params: Object) void
+        -autoMapper(clazz: Class~T~) QueryHandler~T~
+    }
+
+    %% ─────────────────────────────────────────
+    %%  ORM ANNOTATION SYSTEM
+    %%  (the custom mini-ORM that makes
+    %%   DatabaseManager generic over any model)
+    %% ─────────────────────────────────────────
+
+    class Table {
+        <<annotation>>
+        +name() String
+        +isSubTable() boolean
+    }
+
+    class Column {
+        <<annotation>>
+        +name() String
+        +foreignKey() boolean
+        +nullableforeignKey() boolean
+        +upsertIgnore() boolean
+    }
+
+    class Id {
+        <<annotation>>
+        +isPrimary() boolean
+    }
+
+    class OneToMany {
+        <<annotation>>
+        +targetEntity() Class
+        +mappedBy() String
+    }
+
+    class ManyToOne {
+        <<annotation>>
+        +targetEntity() Class
+        +joinColumn() String
+    }
+
+    class ManyToMany {
+        <<annotation>>
+        +targetEntity() Class
+        +joinTable() String
+        +joinColumn() String
+        +inverseJoinColumn() String
+    }
+
+    class QueryHandler~T~ {
+        <<FunctionalInterface>>
+        +handle(rs: ResultSet) T
+    }
+
+    %% ─────────────────────────────────────────
+    %%  CONNECTION POOL (external dependency)
+    %% ─────────────────────────────────────────
+
+    class HikariDataSource {
+        <<external>>
+        +getConnection() Connection
+        +close() void
+    }
+
+    %% ─────────────────────────────────────────
+    %%  EXAMPLE CLIENTS
+    %%  (show how every pattern in the project
+    %%   depends on the same Singleton instance)
+    %% ─────────────────────────────────────────
+
+    class UserFactory {
+        -dbManager: DatabaseManager
+        +createUser(type: String, ...) User
+        +getUserById(id: int) User
+        +getUserByUsername(username: String) User
+    }
+
+    class NotificationManager {
+        -dbManager: DatabaseManager
+        +notifyObservers(n: Notification) void
+        -persistNotification(n: Notification) void
+    }
+
+    class AuthenticationContext {
+        -dbManager: DatabaseManager
+        +login(username: String, password: String, ip: String) AuthenticationResult
+        +changePassword(username: String, old: String, new: String) boolean
+    }
+
+    class Section {
+        +enroll(student: Student) int
+        +drop(student: Student) boolean
+    }
+
+    %% ─────────────────────────────────────────
+    %%  EXAMPLE ANNOTATED MODELS
+    %%  (DatabaseManager.upsert() works on any
+    %%   class carrying @Table + @Column)
+    %% ─────────────────────────────────────────
+
+    class User {
+        @Table(name="users")
+        @Id(isPrimary=true) id: int
+        @Column username: String
+        @Column email: String
+        @Column first_name: String
+        @Column last_name: String
+    }
+
+    class Enrollment {
+        @Table(name="enrollments")
+        @Id(isPrimary=true) id: int
+        @Id student_id: int
+        @Id section_id: int
+        @Column status: String
+    }
+
+    %% ─────────────────────────────────────────
+    %%  RELATIONSHIPS — Singleton Pattern
+    %% ─────────────────────────────────────────
+
+    DatabaseManager  ..>  HikariDataSource  : manages pool via
+    DatabaseManager  ..>  QueryHandler      : uses lambda via
+    DatabaseManager  ..>  Table             : reflects on at runtime
+    DatabaseManager  ..>  Column            : reflects on at runtime
+    DatabaseManager  ..>  Id                : reflects on at runtime
+    DatabaseManager  ..>  OneToMany         : reflects on at runtime
+    DatabaseManager  ..>  ManyToOne         : reflects on at runtime
+    DatabaseManager  ..>  ManyToMany        : reflects on at runtime
+
+    %% ─────────────────────────────────────────
+    %%  RELATIONSHIPS — Clients depend on Singleton
+    %% ─────────────────────────────────────────
+
+    UserFactory        ..>  DatabaseManager  : getInstance()
+    NotificationManager ..> DatabaseManager  : getInstance()
+    AuthenticationContext ..> DatabaseManager : getInstance()
+    Section            ..>  DatabaseManager  : getInstance()
+
+    %% ─────────────────────────────────────────
+    %%  RELATIONSHIPS — ORM annotations on models
+    %% ─────────────────────────────────────────
+
+    User       ..>  Table   : annotated with
+    User       ..>  Column  : annotated with
+    User       ..>  Id      : annotated with
+    Enrollment ..>  Table   : annotated with
+    Enrollment ..>  Column  : annotated with
+    Enrollment ..>  Id      : annotated with
+
+    %% ─────────────────────────────────────────
+    %%  STYLING — Singleton nodes pop (teal)
+    %% ─────────────────────────────────────────
+    style DatabaseManager fill:#0d3b3b,stroke:#00b4d8,stroke-width:3px,color:#ffffff

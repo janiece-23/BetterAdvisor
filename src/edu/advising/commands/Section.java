@@ -121,6 +121,10 @@ public class Section {
                 ensureId();
                 Enrollment enrollment = new Enrollment(newStudent.getId(), this.getId());
                 DatabaseManager.getInstance().upsert(enrollment);
+                // Make sure enrollments has already been lazyloaded.
+                if(this.enrollments == null) {
+                    this.getEnrollments();
+                }
                 this.enrollments.add(enrollment);
                 enrolledStudents.add(newStudent);
                 enrolled++;
@@ -178,8 +182,8 @@ public class Section {
             // First let's see if we can find a WaitlistEntry for this student.
             Optional<WaitlistEntry> wle = getWaitlist().stream()
                     .filter(we -> we.getStudentId() == student.getId()).findFirst();
-            if(wle.isPresent()) {
-                DatabaseManager.getInstance().delete(wle);
+            if (wle.isPresent()) {
+                DatabaseManager.getInstance().delete(wle.get());  // ← unwrap the Optional
                 return waitlist.remove(wle.get());
             }
             return true;
