@@ -14,20 +14,24 @@ import java.nio.charset.StandardCharsets;
 public class LoginHandler implements HttpHandler {
     private final AuthenticationContext authenticationContext = new AuthenticationContext(new BasicAuthentication());
 
-    @Override
-    public void handle(HttpExchange exchange) throws IOException {
+    public void addCorsHeader(HttpExchange exchange){
         exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
         exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "POST, OPTIONS");
-        exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "Content-Type");
+        exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+    }
+
+    @Override
+    public void handle(HttpExchange exchange) throws IOException {
+        addCorsHeader(exchange);
 
         if("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())){
-            exchange.sendResponseHeaders(201, -1);
+            exchange.sendResponseHeaders(204, -1);
             return;
         }
         if(!"POST".equalsIgnoreCase(exchange.getRequestMethod())){
             sendJson(exchange, 405, "{\"success\": false, \"message\":\"Method not allowed\"}");
         }
-
         //read and parse request body
 
         String body = readBody(exchange);
@@ -51,6 +55,7 @@ public class LoginHandler implements HttpHandler {
                     userType, fullName, result.getMessage()
             );
             sendJson(exchange, 200, json);
+            System.out.println("user logged in");
         }
         else {
             String json = String.format("{\"success\": false, \"userType\": null, \"message\": \"%s\"}", result.getMessage());
