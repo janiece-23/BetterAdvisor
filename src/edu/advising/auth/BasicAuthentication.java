@@ -23,13 +23,42 @@ public class BasicAuthentication implements AuthenticationStrategy {
     public AuthenticationResult authenticate(String username, String password) {
         try {
             String sql = "SELECT password FROM users WHERE username = ?";
+
             return dbManager.executeQuery(sql, rs -> {
+
+                if (!rs.next()) {
+                    System.out.println("❌ USER NOT FOUND: " + username);
+                    return AuthenticationResult.failed("Invalid credentials");
+                }
+
+                String dbPassword = rs.getString("password");
+
+                // DEBUG (temporary, safe)
+                System.out.println("======================");
+                System.out.println("🔍 DB PASSWORD: [" + dbPassword + "]");
+                System.out.println("🔍 INPUT PASSWORD: [" + password + "]");
+                System.out.println("🔍 MATCH: " + dbPassword.equals(password));
+                System.out.println("======================");
+                // ORIGINAL LOGIC (unchanged behavior)
+                if (dbPassword.equals(password)) {
+                    User user = userFactory.getUserByUsername(username);
+                    System.out.println("✅ LOGIN SUCCESS: " + username);
+                    return AuthenticationResult.success(user);
+                }
+
+                System.out.println("❌ INVALID PASSWORD");
+                return AuthenticationResult.failed("Invalid credentials");
+
+            }, username);
+
+           /* return dbManager.executeQuery(sql, rs -> {
                 if (rs.next() && rs.getString("password").equals(password)) {
                     User user = userFactory.getUserByUsername(username);
+                    System.out.println("username not found" + username);
                     return AuthenticationResult.success(user);
                 }
                 return AuthenticationResult.failed("Invalid credentials");
-            }, username);
+            }, username);*/
         } catch (SQLException e) {
             System.err.println("Authentication error: " + e.getMessage());
             return AuthenticationResult.failed("Authentication error");

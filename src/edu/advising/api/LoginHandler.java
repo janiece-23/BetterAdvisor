@@ -12,13 +12,13 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
 public class LoginHandler implements HttpHandler {
+
     private final AuthenticationContext authenticationContext = new AuthenticationContext(new BasicAuthentication());
 
     public void addCorsHeader(HttpExchange exchange){
         exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
         exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "POST, OPTIONS");
         exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type, Authorization");
-
     }
 
     @Override
@@ -31,6 +31,7 @@ public class LoginHandler implements HttpHandler {
         }
         if(!"POST".equalsIgnoreCase(exchange.getRequestMethod())){
             sendJson(exchange, 405, "{\"success\": false, \"message\":\"Method not allowed\"}");
+            return;
         }
         //read and parse request body
 
@@ -38,8 +39,13 @@ public class LoginHandler implements HttpHandler {
         String username = extractField(body, "username");
         String password = extractField(body, "password");
 
+        System.out.println("body= "+ body);
+        System.out.println("username= "+ username);
+        System.out.println("PASSWORD= "+ password);
+
         if (username == null || password == null){
            sendJson(exchange, 400, "{\"success\": false, \"message\": \"username and password is required!\"}");
+           return;
         }
 
         //Delegate the Strategy pattern

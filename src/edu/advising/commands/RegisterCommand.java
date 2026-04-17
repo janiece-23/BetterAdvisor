@@ -37,6 +37,7 @@ public class RegisterCommand extends BaseCommand {
     public void execute() {
         executionTime = LocalDateTime.now();
 
+//        checks if the section is full
         if (!section.hasCapacity()) {
             successful = false;
             System.out.printf("✗ Registration failed for %s - section full%n", section.getCourseCode());
