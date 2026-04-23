@@ -712,6 +712,24 @@ public class DatabaseManager {
                     "history_count INT DEFAULT 5, " +  // Can't reuse last 5 passwords
                     "is_active BOOLEAN DEFAULT TRUE)");
 
+            executeUpdate("CREATE TABLE IF NOT EXISTS application_tokens (" +
+                    "id INT AUTO_INCREMENT PRIMARY KEY, " +
+                    "user_id INT NOT NULL, " +
+                    "token VARCHAR(255) UNIQUE NOT NULL, " +
+                    "status VARCHAR(20) DEFAULT 'PENDING', " +   // PENDING, APPROVED, DENIED
+                    "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
+                    "expires_at TIMESTAMP NOT NULL, " +
+                    "actioned_at TIMESTAMP, " +
+                    "actioned_by INT, " +                         // admin user id
+                    "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE, " +
+                    "FOREIGN KEY (actioned_by) REFERENCES users(id))");
+
+            executeUpdate("CREATE INDEX IF NOT EXISTS idx_app_tokens_status " +
+                    "ON application_tokens(status)");
+            executeUpdate("CREATE INDEX IF NOT EXISTS idx_app_tokens_token " +
+                    "ON application_tokens(token)");
+
+
             // ================================================================
             // WEEK 4: Notifications (Observer Pattern)
             // ================================================================
