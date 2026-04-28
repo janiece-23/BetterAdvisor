@@ -1,6 +1,5 @@
-package edu.advising.application;
+package edu.advising.auth;
 
-import edu.advising.auth.PasswordPolicyValidator;
 import edu.advising.common.ValidationResult;
 import edu.advising.core.DatabaseManager;
 import edu.advising.users.User;
@@ -11,10 +10,10 @@ import java.time.LocalDateTime;
 import java.time.Year;
 import java.util.List;
 
-public class AdminApplicationService {
+public class ApplicationAdminService {
     private final DatabaseManager dbManager;
 
-    public AdminApplicationService() {
+    public ApplicationAdminService() {
         this.dbManager = DatabaseManager.getInstance();
     }
 

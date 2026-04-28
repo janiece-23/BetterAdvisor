@@ -1,4 +1,4 @@
-package edu.advising.application;
+package edu.advising.auth;
 
 import edu.advising.core.Column;
 import edu.advising.core.Id;

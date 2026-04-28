@@ -1,4 +1,4 @@
-package edu.advising.application;
+package edu.advising.auth;
 
 import edu.advising.common.ValidationResult;
 import edu.advising.core.DatabaseManager;
