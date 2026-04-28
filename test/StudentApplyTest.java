@@ -1,5 +1,5 @@
-import edu.advising.application.ApplicationService;
-import edu.advising.application.ApplicationService.ApplicationResult;
+import edu.advising.auth.ApplicationService;
+import edu.advising.auth.ApplicationService.ApplicationResult;
 
 import java.util.Scanner;
 
