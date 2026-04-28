@@ -52,7 +52,8 @@ public class Server {
         });
 */
 
-        server.createContext("/api/login", new LoginHandler()); // <-- Add the longin handler class here
+        server.createContext("/api/login", new LoginHandler());
+        //server.createContext("/api/apply", new ApplyHandler());
         server.setExecutor(Executors.newCachedThreadPool());
 //        server.setExecutor(null);
         server.start();
