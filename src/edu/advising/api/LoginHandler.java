@@ -1,5 +1,6 @@
 package edu.advising.api;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import edu.advising.auth.AuthenticationContext;
@@ -13,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 
 public class LoginHandler implements HttpHandler {
 
+    ObjectMapper mapper = new ObjectMapper();
     private final AuthenticationContext authenticationContext = new AuthenticationContext(new BasicAuthentication());
 
     public void addCorsHeader(HttpExchange exchange){
@@ -85,6 +87,7 @@ public class LoginHandler implements HttpHandler {
         }
     }
 
+    //TODO: Rewrite to use JSON
     private String extractField(String json, String fieldName){
         // Matches: "username":"jsmith"  or  "username" : "jsmith"
         String pattern = "\"" + fieldName + "\"\\s*:\\s*\"([^\"]+)\"";

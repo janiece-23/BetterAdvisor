@@ -166,7 +166,7 @@ public class ApplicationService {
             return new ApplicationResult(msg);
         }
         public boolean isSuccess(){ return  success; }
-        public int getuserId(){ return  userId; }
+        public int getUserId(){ return  userId; }
         public String getToken(){ return token; }
         public java.util.List<String> getErrors(){
             if (errorMessage != null) return java.util.List.of(errorMessage);

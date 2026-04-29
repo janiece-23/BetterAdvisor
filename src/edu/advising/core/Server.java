@@ -1,6 +1,7 @@
 package edu.advising.core;
 
 import com.sun.net.httpserver.HttpServer;
+import edu.advising.api.ApplyHandler;
 import edu.advising.api.LoginHandler;
 import edu.advising.users.UserFactory;
 
@@ -53,9 +54,9 @@ public class Server {
 */
 
         server.createContext("/api/login", new LoginHandler());
-        //server.createContext("/api/apply", new ApplyHandler());
-        server.setExecutor(Executors.newCachedThreadPool());
-//        server.setExecutor(null);
+        server.createContext("/api/apply", new ApplyHandler());
+//        server.setExecutor(Executors.newCachedThreadPool());
+//        serkver.setExecutor(null);
         server.start();
 
         System.out.printf("✓ Server running on http://localhost:%d%n", PORT);
