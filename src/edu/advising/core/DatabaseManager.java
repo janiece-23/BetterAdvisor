@@ -7,6 +7,8 @@ package edu.advising.core;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+
+import javax.sql.DataSource;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -1207,5 +1209,9 @@ public class DatabaseManager {
             e.printStackTrace();
             System.err.println("Error seeding database: " + e.getMessage());
         }
+    }
+
+    public DataSource getDataSource() {
+        return dataSource;
     }
 }
