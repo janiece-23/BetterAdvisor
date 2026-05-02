@@ -1,4 +1,4 @@
-package edu.advising.api;
+package edu.advising.auth;
 
 public enum ApplicationStatus {
     PENDING,

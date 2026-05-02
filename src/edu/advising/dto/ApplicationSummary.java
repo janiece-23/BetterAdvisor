@@ -1,4 +1,4 @@
-package edu.advising.api;
+package edu.advising.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 

@@ -1,4 +1,4 @@
-package edu.advising.api;
+package edu.advising.dto;
 
 public class ApplyRequest {
     public String firstName;

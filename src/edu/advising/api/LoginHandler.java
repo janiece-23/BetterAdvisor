@@ -4,6 +4,7 @@ import edu.advising.auth.AuthenticationContext;
 import edu.advising.auth.AuthenticationResult;
 import edu.advising.auth.BasicAuthentication;
 import edu.advising.common.ValidationResult;
+import edu.advising.dto.LoginRequest;
 import edu.advising.templates.AuthorizationTemplate;
 
 import java.io.IOException;

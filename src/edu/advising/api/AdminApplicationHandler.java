@@ -1,7 +1,9 @@
 package edu.advising.api;
 
 import com.sun.net.httpserver.HttpExchange;
+import edu.advising.auth.ApplicationStatus;
 import edu.advising.common.JsonUtils;
+import edu.advising.dto.ApplicationSummary;
 import edu.advising.templates.AuthorizationTemplate;
 import org.jdbi.v3.core.Jdbi;
 

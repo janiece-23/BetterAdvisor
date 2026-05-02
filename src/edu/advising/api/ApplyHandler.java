@@ -2,6 +2,7 @@ package edu.advising.api;
 import com.sun.net.httpserver.HttpExchange;
 import edu.advising.auth.ApplicationService;
 import edu.advising.common.ValidationResult;
+import edu.advising.dto.ApplyRequest;
 import edu.advising.templates.AuthorizationTemplate;
 import java.io.IOException;
 
