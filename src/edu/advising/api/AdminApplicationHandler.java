@@ -1,7 +1,6 @@
 package edu.advising.api;
 
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 import edu.advising.common.JsonUtils;
 import edu.advising.templates.AuthorizationTemplate;
 import org.jdbi.v3.core.Jdbi;
@@ -9,7 +8,6 @@ import org.jdbi.v3.core.Jdbi;
 import javax.sql.DataSource;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 public class AdminApplicationHandler extends AuthorizationTemplate<AdminApplicationHandler.EmptyRequest> {
     public static class EmptyRequest{}

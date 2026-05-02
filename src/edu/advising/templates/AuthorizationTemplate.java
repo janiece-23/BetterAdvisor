@@ -7,8 +7,6 @@ import edu.advising.common.ValidationResult;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
 
 public abstract class AuthorizationTemplate<T> implements HttpHandler {
 
